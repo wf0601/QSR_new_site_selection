@@ -126,6 +126,54 @@ final_score = base_score × membership_strength   (normalised to [0, 1])
 
 ---
 
+## Mathematical formulation
+
+### Demand weighting
+
+HDBSCAN is fitted on a review-weighted point cloud. Each restaurant $i$ with review count $c_i$ is replicated $r_i$ times before clustering:
+
+$$r_i = \operatorname{clip}\!\left(\operatorname{round}\!\left(\frac{c_i}{Q_{25}}\right),\ 1,\ 10\right)$$
+
+where $Q_{25}$ is the 25th-percentile review count across all restaurants. High-traffic locations therefore exert proportionally more influence on cluster formation.
+
+### Cluster statistics
+
+For cluster $k$ containing restaurants $\mathcal{R}_k$:
+
+$$D_k = \sum_{i \in \mathcal{R}_k} c_i \qquad \text{(total demand)}$$
+
+$$\text{gap}_k = 1 - \frac{\bigl|\{i \in \mathcal{R}_k : i \text{ is } \mathbf{M}\}\bigr|}{|\mathcal{R}_k|} \qquad \text{(M-gap)}$$
+
+### Candidate scoring
+
+For candidate grid point $p$ assigned to cluster $k(p)$:
+
+$$b(p) = \frac{\min\bigl(d_{\text{own}}(p),\ 2\ \text{km}\bigr)}{2\ \text{km}} \qquad \text{(distance buffer)}$$
+
+$$s_{\text{base}}(p) = 0.40 \cdot \frac{D_{k(p)}}{D_{\max}} + 0.40 \cdot \text{gap}_{k(p)} + 0.20 \cdot b(p)$$
+
+$$s(p) = \frac{s_{\text{base}}(p) \cdot m(p)}{\displaystyle\max_{p'}\, s_{\text{base}}(p') \cdot m(p')} \in [0, 1]$$
+
+where $m(p)$ is the HDBSCAN soft-cluster membership strength ($m = 0.5$ for noise-reassigned candidates by default).
+
+### Greedy diversity selection (NMS)
+
+Sites are selected iteratively. Let $S$ be the chosen set, initialised to $\emptyset$:
+
+$$p^* = \operatorname*{arg\,max}_{p \,\notin\, S,\ d_H(p,\, s) \geq 1.5\ \text{km}\ \forall s \in S}\ s(p), \qquad S \leftarrow S \cup \{p^*\}$$
+
+Repeat until $|S| = 50$. This ensures no two selected sites are closer than 1.5 km (configurable via `MIN_SPREAD_KM`).
+
+### Haversine distance
+
+All spatial queries use the haversine metric via scikit-learn `BallTree`:
+
+$$d_H(p, q) = 2R \arcsin\!\sqrt{\sin^2\!\frac{\Delta\phi}{2} + \cos\phi_p\cos\phi_q\,\sin^2\!\frac{\Delta\lambda}{2}}$$
+
+where $R = 6{,}371\ \text{km}$, $\phi$ is latitude, and $\lambda$ is longitude (both in radians).
+
+---
+
 ## Key parameters (`config_modeling.py`)
 
 | Parameter | Default | Effect |

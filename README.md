@@ -126,6 +126,54 @@ final_score = base_score × membership_strength   （[0, 1]に正規化）
 
 ---
 
+## 数式による定式化
+
+### 需要重み付け
+
+HDBSCANはレビュー数で重み付けした点群に対してフィッティングを行う。レビュー数 $c_i$ を持つ各レストラン $i$ は、クラスタリング前に $r_i$ 回複製される：
+
+$$r_i = \operatorname{clip}\!\left(\operatorname{round}\!\left(\frac{c_i}{Q_{25}}\right),\ 1,\ 10\right)$$
+
+$Q_{25}$ は全レストランのレビュー数の第25パーセンタイル。これにより、高トラフィックな立地がクラスター形成により強い影響を与える。
+
+### クラスター統計
+
+クラスター $k$（所属レストラン集合 $\mathcal{R}_k$）に対して：
+
+$$D_k = \sum_{i \in \mathcal{R}_k} c_i \qquad \text{（総需要）}$$
+
+$$\text{gap}_k = 1 - \frac{\bigl|\{i \in \mathcal{R}_k : i \text{ が } \mathbf{M}\}\bigr|}{|\mathcal{R}_k|} \qquad \text{（M空白度）}$$
+
+### 候補地スコアリング
+
+クラスター $k(p)$ に割り当てられた候補グリッド点 $p$ に対して：
+
+$$b(p) = \frac{\min\bigl(d_{\text{own}}(p),\ 2\ \text{km}\bigr)}{2\ \text{km}} \qquad \text{（距離バッファ）}$$
+
+$$s_{\text{base}}(p) = 0.40 \cdot \frac{D_{k(p)}}{D_{\max}} + 0.40 \cdot \text{gap}_{k(p)} + 0.20 \cdot b(p)$$
+
+$$s(p) = \frac{s_{\text{base}}(p) \cdot m(p)}{\displaystyle\max_{p'}\, s_{\text{base}}(p') \cdot m(p')} \in [0, 1]$$
+
+$m(p)$ はHDBSCANのソフトクラスターメンバーシップ強度（ノイズ再割り当て候補のデフォルト値： $m = 0.5$）。
+
+### 貪欲法NMS（多様性選択）
+
+選択済み集合を $S = \emptyset$ として初期化し、繰り返し選択：
+
+$$p^* = \operatorname*{arg\,max}_{p \,\notin\, S,\ d_H(p,\, s) \geq 1.5\ \text{km}\ \forall s \in S}\ s(p), \qquad S \leftarrow S \cup \{p^*\}$$
+
+$|S| = 50$ になるまで繰り返す。これにより、いかなる2候補地も1.5km未満に近接しないことが保証される（`MIN_SPREAD_KM` で設定可能）。
+
+### ハーバーサイン距離
+
+すべての空間クエリは、scikit-learnの `BallTree` によるハーバーサイン距離を使用：
+
+$$d_H(p, q) = 2R \arcsin\!\sqrt{\sin^2\!\frac{\Delta\phi}{2} + \cos\phi_p\cos\phi_q\,\sin^2\!\frac{\Delta\lambda}{2}}$$
+
+$R = 6{,}371\ \text{km}$、$\phi$ は緯度、$\lambda$ は経度（いずれもラジアン）。
+
+---
+
 ## 主要パラメータ（`config_modeling.py`）
 
 | パラメータ | デフォルト | 効果 |
