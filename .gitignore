@@ -21,7 +21,9 @@ data/
 
 # Generated PowerPoint decks and deck builder scripts
 output/*.pptx
-make_*_deck.js
+make_pptx.py
+make_business_deck.js
+make_tech_deck.js
 
 # Claude Code internal
 .claude/
