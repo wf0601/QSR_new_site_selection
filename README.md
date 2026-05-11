@@ -132,7 +132,7 @@ final_score = base_score × membership_strength   （[0, 1]に正規化）
 
 HDBSCANはレビュー数で重み付けした点群に対してフィッティングを行う。レビュー数 $c_i$ を持つ各レストラン $i$ は、クラスタリング前に $r_i$ 回複製される：
 
-$$r_i = \operatorname{clip}\!\left(\operatorname{round}\!\left(\frac{c_i}{Q_{25}}\right),\ 1,\ 10\right)$$
+$$r_i = \text{clip}\!\left(\text{round}\!\left(\frac{c_i}{Q_{25}}\right),\ 1,\ 10\right)$$
 
 $Q_{25}$ は全レストランのレビュー数の第25パーセンタイル。これにより、高トラフィックな立地がクラスター形成により強い影響を与える。
 
@@ -160,7 +160,7 @@ $m(p)$ はHDBSCANのソフトクラスターメンバーシップ強度（ノイ
 
 選択済み集合を $S = \emptyset$ として初期化し、繰り返し選択：
 
-$$p^* = \operatorname*{arg\,max}_{p \,\notin\, S,\ d_H(p,\, s) \geq 1.5\ \text{km}\ \forall s \in S}\ s(p), \qquad S \leftarrow S \cup \{p^*\}$$
+$$p^* = \arg\max_{p \,\notin\, S,\ d_H(p,s) \geq 1.5\,\text{km},\ \forall s \in S}\ s(p), \qquad S \leftarrow S \cup \{p^*\}$$
 
 $|S| = 50$ になるまで繰り返す。これにより、いかなる2候補地も1.5km未満に近接しないことが保証される（`MIN_SPREAD_KM` で設定可能）。
 

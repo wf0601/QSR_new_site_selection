@@ -132,7 +132,7 @@ final_score = base_score × membership_strength   (normalised to [0, 1])
 
 HDBSCAN is fitted on a review-weighted point cloud. Each restaurant $i$ with review count $c_i$ is replicated $r_i$ times before clustering:
 
-$$r_i = \operatorname{clip}\!\left(\operatorname{round}\!\left(\frac{c_i}{Q_{25}}\right),\ 1,\ 10\right)$$
+$$r_i = \text{clip}\!\left(\text{round}\!\left(\frac{c_i}{Q_{25}}\right),\ 1,\ 10\right)$$
 
 where $Q_{25}$ is the 25th-percentile review count across all restaurants. High-traffic locations therefore exert proportionally more influence on cluster formation.
 
@@ -160,7 +160,7 @@ where $m(p)$ is the HDBSCAN soft-cluster membership strength ($m = 0.5$ for nois
 
 Sites are selected iteratively. Let $S$ be the chosen set, initialised to $\emptyset$:
 
-$$p^* = \operatorname*{arg\,max}_{p \,\notin\, S,\ d_H(p,\, s) \geq 1.5\ \text{km}\ \forall s \in S}\ s(p), \qquad S \leftarrow S \cup \{p^*\}$$
+$$p^* = \arg\max_{p \,\notin\, S,\ d_H(p,s) \geq 1.5\,\text{km},\ \forall s \in S}\ s(p), \qquad S \leftarrow S \cup \{p^*\}$$
 
 Repeat until $|S| = 50$. This ensures no two selected sites are closer than 1.5 km (configurable via `MIN_SPREAD_KM`).
 
