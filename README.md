@@ -1,72 +1,68 @@
-# Geo-intelligence Decision System (Demo)
+[🇯🇵 日本語](README.md) | [🇬🇧 English](README_EN.md)
 
-A data pipeline that scrapes restaurant data from Tabelog, clusters dining-demand zones across Tokyo with HDBSCAN, and scores candidate locations for new McDonald's outlets — complete with an interactive map and PowerPoint decks.
+# ジオ・インテリジェンス意思決定システム（デモ）
 
-![Interactive map preview](output/screenshot_interactive_map.png)
+Tabelog等のクローリング可能なデータソースからレストランデータを収集し、HDBSCANで東京の飲食需要ゾーンをクラスタリングして、マクドナルドの新規出店候補地をスコアリングするデータパイプライン。
 
----
-
-## How it works
-
-```
-Tabelog scraping → demand clustering (HDBSCAN) → candidate scoring → interactive map + deck
-```
-
-1. **Scrape** — collect location and review data for McDonald's and competitor chains from Tabelog
-2. **Cluster** — fit HDBSCAN on all restaurants weighted by review count to discover natural dining-demand zones
-3. **Score** — rank a dense candidate grid by cluster demand, McDonald's gap, and distance buffer
-4. **Select** — apply greedy NMS (1.5 km spread) to pick geographically diverse top-50 sites
-5. **Output** — interactive Folium map + ranked CSV + PowerPoint summary decks
+![インタラクティブマップ プレビュー](assets/thumbnail.png)
 
 ---
 
-## Project structure
+## 仕組み
 
 ```
-├── data/                               # Scraped CSVs — gitignored, re-generate with scrape_*.py
+スクレイピング → 需要クラスタリング（HDBSCAN）→ 候補地スコアリング → インタラクティブマップ
+```
+
+1. **スクレイピング** — マクドナルドおよび競合チェーンの位置情報・レビュー数を収集
+2. **クラスタリング** — 全レストランをレビュー数で重み付けしてHDBSCANを実行し、飲食需要ゾーンを発見
+3. **スコアリング** — クラスター需要・マクドナルド空白度・距離バッファの3指標で候補地をランキング
+4. **選定** — 貪欲法NMS（最小間隔1.5km）で地理的に分散した上位50候補を選出
+5. **出力** — インタラクティブFoliumマップ＋ランキングCSV
+
+---
+
+## プロジェクト構成
+
+```
+├── assets/
+│   └── thumbnail.png                  # マップのプレビュー画像
 │
 ├── output/
-│   ├── interactive_map.html            # Self-contained interactive map (main deliverable)
-│   └── top_candidates.csv             # Ranked candidate sites
+│   ├── interactive_map.html           # 自己完結型インタラクティブマップ（メイン成果物）
+│   └── top_candidates.csv            # 候補地ランキング
 │
-├── assets/
-│   └── thumbnail.png                  # Map preview image
+├── scraper.py                         # Tabelogスクレイパー＋共通スクレイピングループ
+├── scrape_location.py                 # 単一ブランド・区のスクレイプユーティリティ
+├── scrape_tokyo_burger_chains.py      # バーガー競合チェーンのスクレイプ
+├── scrape_tokyo_teishoku_chains.py    # 定食競合チェーンのスクレイプ
+├── scrape_tokyo_family_chains.py      # ファミレス競合チェーンのスクレイプ
 │
-├── scraper.py                          # Tabelog scraper + shared scraping loop
-├── scrape_location.py                  # Single brand/ward scrape utility
-├── scrape_tokyo_burger_chains.py       # Scrape burger competitors
-├── scrape_tokyo_teishoku_chains.py     # Scrape teishoku competitors
-├── scrape_tokyo_family_chains.py       # Scrape family restaurant competitors
+├── config.py                          # スクレイピング設定（チェーン・区・エイリアス）
+├── config_modeling.py                 # モデリングパラメータ一覧
+├── spatial_features.py                # BallTreeヘルパー（ハーバーサイン距離）
 │
-├── config.py                           # Scraping config (chains, wards, aliases)
-├── config_modeling.py                  # All modelling parameters in one place
-├── spatial_features.py                 # BallTree helpers (haversine distances)
+├── site_selection.py                  # フルパイプライン：クラスタリング → スコアリング → CSV出力
+├── app_interactive.py                 # ライブコントロール付きインタラクティブHTMLマップ
 │
-├── site_selection.py                   # Full pipeline: cluster → score → CSV
-├── app_interactive.py                  # Interactive HTML map with live controls
-│
-├── make_pptx.py                        # Deck generator (python-pptx)
-│
-├── requirements.txt
-└── package.json
+└── requirements.txt
 ```
 
 ---
 
-## Setup
+## セットアップ
 
 ```bash
 pip install -r requirements.txt
-npm install          # installs pptxgenjs for deck generation
 ```
 
 ---
 
-## Usage
+## 使い方
 
-### 1 — Scrape data
+### 1 — データのスクレイピング
 
-Each script only scrapes chains not yet present in `data/` — existing brands load from cache automatically.
+各スクリプトは`data/`にデータが存在しないチェーンのみスクレイピングします。既存ブランドはキャッシュから自動読み込みされます。
 
 ```bash
 python scrape_tokyo_burger_chains.py
@@ -74,71 +70,69 @@ python scrape_tokyo_teishoku_chains.py
 python scrape_tokyo_family_chains.py
 ```
 
-To add a new chain, add its slug to the relevant `DEFAULT_*_CHAINS` list in `config.py` (and add an alias to `BRAND_ALIASES` if needed), then re-run the script.
+新しいチェーンを追加する場合は、`config.py`の該当する`DEFAULT_*_CHAINS`リストにスラグを追加し（必要に応じて`BRAND_ALIASES`にエイリアスも追加）、スクリプトを再実行してください。
 
-### 2 — Run site selection
+### 2 — 候補地選定の実行
 
 ```bash
-python site_selection.py     # outputs output/top_candidates.csv
-python app_interactive.py    # outputs output/interactive_map.html
+python site_selection.py     # output/top_candidates.csv を出力
+python app_interactive.py    # output/interactive_map.html を出力
 ```
 
 ---
 
-## Interactive map
+## インタラクティブマップ
 
-`output/interactive_map.html` is fully self-contained — open in any browser, no server required.
+`output/interactive_map.html` は完全自己完結型 — サーバー不要、任意のブラウザで開くだけで使用可能。
 
-**Controls (top-right layer panel)**
-- **Burger / Teishoku / Family weight** — text inputs next to each competitor layer; controls how much that category's restaurant density contributes to the demand score (`0` = ignore, `1.0` = default, `2.0` = double influence)
+**コントロール（右上レイヤーパネル）**
+- **バーガー / 定食 / ファミレス ウェイト** — 各競合カテゴリが需要スコアに与える影響を調整（`0` = 無視、`1.0` = デフォルト、`2.0` = 2倍の影響）
 
-**Controls (bottom-right panel)**
-- **Sparse Area Confidence** — weight for HDBSCAN noise-reassigned candidates (`0` = hidden, `0.5` = default, `1` = equal weight as confirmed clusters)
-- **Top Candidates Shown** — display 5–50 ranked sites (default 50)
+**コントロール（右下パネル）**
+- **スパースエリア信頼度** — HDBSCANノイズ再割り当て候補のメンバーシップウェイト（`0` = 非表示、`0.5` = デフォルト、`1` = 確定クラスターと同等）
+- **表示候補数** — ランキング上位5〜50件を表示（デフォルト50件）
 
-**Map elements**
-- Green badges — candidates from confirmed demand clusters
-- Amber badges — candidates from sparse areas with latent demand
-- Red **M** badge — existing McDonald's outlets
-- Badge number = rank · opacity = score
+**マップ要素**
+- 緑バッジ — 確定需要クラスターからの候補地
+- 橙バッジ — 潜在需要のあるスパースエリアからの候補地
+- 赤 **M** バッジ — 既存マクドナルド店舗
+- バッジの数字 = ランク　・　透明度 = スコア
 
 ---
 
-## Competitor tiers
+## 競合カテゴリ
 
-| Tier | Chains | Weight |
+| カテゴリ | チェーン | ウェイト |
 |---|---|---|
-| Burger (direct) | MOS Burger, KFC, Wendy's | 1.0 |
-| Teishoku (indirect) | Matsuya, Yoshinoya, Sukiya, Nakau, Ootoya | 0.5 |
-| Family (indirect) | Gusto, Saizeriya | 0.3 |
-
-Weights set the default demand-signal contribution per category and are live-adjustable in the map.
+| バーガー（直接競合） | モスバーガー、KFC、ウェンディーズ | 1.0 |
+| 定食（間接競合） | 松屋、吉野家、すき家、なか卯、大戸屋 | 0.5 |
+| ファミレス（間接競合） | ガスト、サイゼリヤ | 0.3 |
 
 ---
 
-## Scoring formula
+## スコアリング計算式
 
 ```
 base_score  = 0.40 × cluster_demand + 0.40 × mcd_gap + 0.20 × distance_buffer
-final_score = base_score × membership_strength   (normalised to [0, 1])
+final_score = base_score × membership_strength   （[0, 1]に正規化）
 ```
 
-| Component | Description |
+| コンポーネント | 説明 |
 |---|---|
-| `cluster_demand` | Total review-weighted demand in the candidate's demand zone |
-| `mcd_gap` | Fraction of restaurants in the zone that are *not* McDonald's |
-| `distance_buffer` | Safe spacing from the nearest existing outlet (capped at 2 km) |
-| `membership_strength` | HDBSCAN soft-cluster confidence (adjustable for sparse areas) |
+| `cluster_demand` | 候補地が属する需要ゾーンのレビュー加重需要の合計 |
+| `mcd_gap` | そのゾーンにおけるマクドナルド以外のレストランの割合 |
+| `distance_buffer` | 既存店舗からの安全距離（最大2km） |
+| `membership_strength` | HDBSCANのソフトクラスター信頼度（スパースエリアで調整可能） |
 
 ---
 
-## Key parameters (`config_modeling.py`)
+## 主要パラメータ（`config_modeling.py`）
 
-| Parameter | Default | Effect |
+| パラメータ | デフォルト | 効果 |
 |---|---|---|
-| `HDBSCAN_PARAMS.min_cluster_size` | 15 | Minimum restaurants to form a demand cluster |
-| `MIN_DIST_TO_OWN_KM` | 0.8 km | Cannibalization guard |
-| `MAX_DIST_TO_COMP_KM` | 3.0 km | Must be near some market activity |
-| `MIN_SPREAD_KM` | 1.5 km | Minimum distance between any two selected sites |
-| `TOP_N_SITES` | 50 | Number of candidate sites to output |
-| `GRID_STEP_DEG` | 0.003° (~330 m) | Candidate grid resolution |
+| `HDBSCAN_PARAMS.min_cluster_size` | 15 | 需要クラスターを形成するための最小レストラン数 |
+| `MIN_DIST_TO_OWN_KM` | 0.8 km | カニバリゼーション防止ガード |
+| `MAX_DIST_TO_COMP_KM` | 3.0 km | 何らかの市場活動の近辺であること |
+| `MIN_SPREAD_KM` | 1.5 km | 選定候補地間の最小距離 |
+| `TOP_N_SITES` | 50 | 出力する候補地数 |
+| `GRID_STEP_DEG` | 0.003°（約330m） | 候補グリッドの解像度 |
