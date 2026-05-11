@@ -1,8 +1,8 @@
 [🇯🇵 日本語](README.md) | [🇬🇧 English](README_EN.md)
 
-# ジオ・インテリジェンス意思決定システム（デモ）
+# Geo-Intelligence 意思決定システム（Demo）
 
-Tabelog等のクローリング可能なデータソースからレストランデータを収集し、HDBSCANで東京の飲食需要ゾーンをクラスタリングして、マクドナルドの新規出店候補地をスコアリングするデータパイプライン。
+TabelogやGoogleMap等のクローリング可能なデータソースからレストランデータを収集し、HDBSCANで東京の飲食需要ゾーン(Demand Zone)をクラスタリングして、マクドナルド(仮名)の新規出店候補地をスコアリングするデータパイプライン。
 
 ![インタラクティブマップ プレビュー](assets/thumbnail.png)
 
@@ -60,7 +60,7 @@ pip install -r requirements.txt
 
 ## 使い方
 
-### 1 — データのスクレイピング
+### 1 — データの収集
 
 各スクリプトは`data/`にデータが存在しないチェーンのみスクレイピングします。既存ブランドはキャッシュから自動読み込みされます。
 
@@ -83,7 +83,7 @@ python app_interactive.py    # output/interactive_map.html を出力
 
 ## インタラクティブマップ
 
-`output/interactive_map.html` は完全自己完結型 — サーバー不要、任意のブラウザで開くだけで使用可能。
+`output/interactive_map.html` は完全自己完結型 — サーバー不要、任意のブラウザで開くだけで使用可能。実装の時、Dockerの使用をおすすめ。
 
 **コントロール（右上レイヤーパネル）**
 - **バーガー / 定食 / ファミレス ウェイト** — 各競合カテゴリが需要スコアに与える影響を調整（`0` = 無視、`1.0` = デフォルト、`2.0` = 2倍の影響）
@@ -136,3 +136,7 @@ final_score = base_score × membership_strength   （[0, 1]に正規化）
 | `MIN_SPREAD_KM` | 1.5 km | 選定候補地間の最小距離 |
 | `TOP_N_SITES` | 50 | 出力する候補地数 |
 | `GRID_STEP_DEG` | 0.003°（約330m） | 候補グリッドの解像度 |
+
+## Contact
+Please mail me if you have any question. 
+ご質問などある場合、お気軽にメールでご連絡ください。
