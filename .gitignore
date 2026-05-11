@@ -19,5 +19,9 @@ node_modules/
 # Scraped raw data — re-generate with scrape_*.py scripts
 data/
 
+# Generated PowerPoint decks and deck builder scripts
+output/*.pptx
+make_*_deck.js
+
 # Claude Code internal
 .claude/
