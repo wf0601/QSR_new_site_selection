@@ -1,0 +1,17 @@
+# Scraping
+requests==2.33.1
+beautifulsoup4==4.14.3
+lxml==6.1.0
+
+# Data & modelling
+numpy==2.4.4
+pandas==3.0.2
+hdbscan==0.8.42
+scikit-learn==1.8.0
+
+# Mapping
+folium==0.20.0
+
+# Presentation
+python-pptx==1.0.2
+markitdown==0.1.5

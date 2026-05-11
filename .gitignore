@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
+
+# Node
+node_modules/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Scraped raw data — re-generate with scrape_*.py scripts
+data/
+
+# Claude Code internal
+.claude/
