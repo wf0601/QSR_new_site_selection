@@ -170,7 +170,11 @@ All spatial queries use the haversine metric via scikit-learn `BallTree`:
 
 $$d_H(p, q) = 2R \arcsin\!\sqrt{\sin^2\!\frac{\Delta\phi}{2} + \cos\phi_p\cos\phi_q\,\sin^2\!\frac{\Delta\lambda}{2}}$$
 
-where $R = 6{,}371\ \text{km}$, $\phi$ is latitude, and $\lambda$ is longitude (both in radians).
+| Symbol | Definition |
+|---|---|
+| R | 6,371 km (Earth's mean radius) |
+| φ | Latitude (radians) |
+| λ | Longitude (radians) |
 
 ---
 
