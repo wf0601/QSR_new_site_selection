@@ -2,7 +2,7 @@
 
 # Geo-intelligence Decision System (Demo)
 
-A data pipeline that scrapes restaurant data from a crawlable source (e.g. Google Maps or Tabelog), clusters dining-demand zones across Tokyo with HDBSCAN, and scores candidate locations for new McDonald's outlets — complete with an interactive map.
+A data pipeline that scrapes restaurant data from a crawlable source (e.g. Google Maps or Tabelog), clusters dining-demand zones across Tokyo with HDBSCAN, and scores candidate locations for new **M** outlets — complete with an interactive map.
 
 ![Interactive map preview](assets/thumbnail.png)
 
@@ -14,9 +14,9 @@ A data pipeline that scrapes restaurant data from a crawlable source (e.g. Googl
 Scraping → demand clustering (HDBSCAN) → candidate scoring → interactive map
 ```
 
-1. **Scrape** — collect location and review data for McDonald's and competitor chains
+1. **Scrape** — collect location and review data for **M** and competitor chains
 2. **Cluster** — fit HDBSCAN on all restaurants weighted by review count to discover natural dining-demand zones
-3. **Score** — rank a dense candidate grid by cluster demand, McDonald's gap, and distance buffer
+3. **Score** — rank a dense candidate grid by cluster demand, **M** gap, and distance buffer
 4. **Select** — apply greedy NMS (1.5 km spread) to pick geographically diverse top-50 sites
 5. **Output** — interactive Folium map + ranked CSV
 
@@ -95,7 +95,7 @@ python app_interactive.py    # outputs output/interactive_map.html
 **Map elements**
 - Green badges — candidates from confirmed demand clusters
 - Amber badges — candidates from sparse areas with latent demand
-- Red **M** badge — existing McDonald's outlets
+- Red **M** badge — existing **M** outlets
 - Badge number = rank · opacity = score
 
 ---
@@ -120,7 +120,7 @@ final_score = base_score × membership_strength   (normalised to [0, 1])
 | Component | Description |
 |---|---|
 | `cluster_demand` | Total review-weighted demand in the candidate's demand zone |
-| `mcd_gap` | Fraction of restaurants in the zone that are *not* McDonald's |
+| `mcd_gap` | Fraction of restaurants in the zone that are *not* **M** |
 | `distance_buffer` | Safe spacing from the nearest existing outlet (capped at 2 km) |
 | `membership_strength` | HDBSCAN soft-cluster confidence (adjustable for sparse areas) |
 
