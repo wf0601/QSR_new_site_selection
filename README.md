@@ -2,7 +2,7 @@
 
 A data pipeline that scrapes restaurant data from Tabelog, clusters dining-demand zones across Tokyo with HDBSCAN, and scores candidate locations for new McDonald's outlets — complete with an interactive map and PowerPoint decks.
 
-![Interactive map preview](assets/thumbnail.png)
+![Interactive map preview](output/screenshot_interactive_map.png)
 
 ---
 
