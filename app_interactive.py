@@ -427,9 +427,11 @@ def build_map(
     m = folium.Map(
         location=[center_lat, center_lon],
         zoom_start=12,
-        tiles="OpenStreetMap",
+        tiles=None,
         control_scale=True,
     )
+    folium.TileLayer("CartoDB Positron", name="CartoBaseMap").add_to(m)
+    folium.TileLayer("OpenStreetMap", name="OpenStreetMap").add_to(m)
 
     # Demand heatmap
     heat = all_df[all_df["review_count"] > 0]

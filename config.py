@@ -58,6 +58,8 @@ BRAND_ALIASES = {
     "seizariya": "サイゼリヤ",
     "first_kitchen": "ファーストキッチン",
     "lotteria": "ロッテリア",
+    "freshness_burger": "フレッシュネスバーガー",
+    "freshness burger": "フレッシュネスバーガー",
 }
 
 BRAND_NAME_PATTERNS = {
@@ -86,6 +88,8 @@ DEFAULT_BURGER_CHAINS = [
     "wendys",
     "kfc",
     "mosburger",
+    "lotteria",
+    "freshness_burger",
 ]
 DEFAULT_TEISHOKU_CHAINS = [
     "sukiya",

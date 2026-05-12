@@ -51,8 +51,8 @@ RADII_KM = [0.5, 1.0, 2.0]
 # haversine metric gives proper spherical distances.
 # ---------------------------------------------------------------------------
 HDBSCAN_PARAMS = {
-    "min_cluster_size"        : 15,   # minimum restaurants to form a demand cluster
-    "min_samples"             : 5,
+    "min_cluster_size"        : 5,    # minimum restaurants to form a demand cluster
+    "min_samples"             : 2,
     "metric"                  : "haversine",
     "prediction_data"         : True,
     "core_dist_n_jobs"        : -1,
