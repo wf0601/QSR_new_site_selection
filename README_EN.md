@@ -182,9 +182,10 @@ $$d_H(p, q) = 2R \arcsin\!\sqrt{\sin^2\!\frac{\Delta\phi}{2} + \cos\phi_p\cos\ph
 
 | Parameter | Default | Effect |
 |---|---|---|
-| `HDBSCAN_PARAMS.min_cluster_size` | 15 | Minimum restaurants to form a demand cluster |
+| `HDBSCAN_PARAMS.min_cluster_size` | 5 | Minimum restaurants to form a demand cluster |
+| `HDBSCAN_PARAMS.min_samples` | 2 | Minimum neighbours for a core point |
 | `MIN_DIST_TO_OWN_KM` | 0.8 km | Cannibalization guard |
 | `MAX_DIST_TO_COMP_KM` | 3.0 km | Must be near some market activity |
 | `MIN_SPREAD_KM` | 1.5 km | Minimum distance between any two selected sites |
 | `TOP_N_SITES` | 50 | Number of candidate sites to output |
-| `GRID_STEP_DEG` | 0.003° (~330 m) | Candidate grid resolution |
+| `GRID_STEP_DEG` | 0.002° (~220 m) | Candidate grid resolution |

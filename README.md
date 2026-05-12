@@ -182,12 +182,13 @@ $$d_H(p, q) = 2R \arcsin\!\sqrt{\sin^2\!\frac{\Delta\phi}{2} + \cos\phi_p\cos\ph
 
 | パラメータ | デフォルト | 効果 |
 |---|---|---|
-| `HDBSCAN_PARAMS.min_cluster_size` | 15 | 需要クラスターを形成するための最小レストラン数 |
+| `HDBSCAN_PARAMS.min_cluster_size` | 5 | 需要クラスターを形成するための最小レストラン数 |
+| `HDBSCAN_PARAMS.min_samples` | 2 | コアポイントに必要な最小近傍数 |
 | `MIN_DIST_TO_OWN_KM` | 0.8 km | カニバリゼーション防止ガード |
 | `MAX_DIST_TO_COMP_KM` | 3.0 km | 何らかの市場活動の近辺であること |
 | `MIN_SPREAD_KM` | 1.5 km | 選定候補地間の最小距離 |
 | `TOP_N_SITES` | 50 | 出力する候補地数 |
-| `GRID_STEP_DEG` | 0.003°（約330m） | 候補グリッドの解像度 |
+| `GRID_STEP_DEG` | 0.002°（約220m） | 候補グリッドの解像度 |
 
 ## Contact
 Please mail me if you have any question. 
