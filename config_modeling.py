@@ -62,7 +62,7 @@ HDBSCAN_PARAMS = {
 # ---------------------------------------------------------------------------
 # Candidate grid
 # ---------------------------------------------------------------------------
-GRID_STEP_DEG = 0.003   # ~330 m spacing → ~8,500 points across Tokyo bbox
+GRID_STEP_DEG = 0.002   # ~220 m spacing → ~19,000 points across Tokyo bbox
 
 # ---------------------------------------------------------------------------
 # Candidate filtering thresholds

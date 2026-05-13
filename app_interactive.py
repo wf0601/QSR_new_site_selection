@@ -110,9 +110,11 @@ def _serialise_candidates(scored: pd.DataFrame) -> str:
                 "mcd_gap_score", "distance_buffer", "dist_to_own_km", "dist_to_comp_km"]:
         data[col] = data[col].round(5)
     records = data.to_dict("records")
-    if "nearby" in scored.columns:
-        for i, rec in enumerate(records):
+    for i, rec in enumerate(records):
+        if "nearby" in scored.columns:
             rec["nearby"] = scored["nearby"].iat[i]
+        if "nearest_own_name" in scored.columns:
+            rec["nearest_own_name"] = scored["nearest_own_name"].iat[i]
     return json.dumps(records, ensure_ascii=False, separators=(",", ":"))
 
 
@@ -153,6 +155,19 @@ def _add_nearby_competitors(
 
     out = scored.copy()
     out["nearby"] = nearby_all
+    return out
+
+
+def _add_nearest_own(scored: pd.DataFrame, own_df: pd.DataFrame) -> pd.DataFrame:
+    """Attach the name of the nearest existing M outlet to each candidate."""
+    from sklearn.neighbors import BallTree
+    coords_own = np.radians(own_df[["latitude", "longitude"]].values)
+    names_own  = own_df["name"].fillna(OWN_BRAND).values
+    tree = BallTree(coords_own, metric="haversine")
+    cands_rad = np.radians(scored[["latitude", "longitude"]].values)
+    _, idxs = tree.query(cands_rad, k=1)
+    out = scored.copy()
+    out["nearest_own_name"] = names_own[idxs.flatten()]
     return out
 
 
@@ -382,7 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {{
         "McDonald's in cluster: "+c.mcd_count+
           ' ('+(c.mcd_gap_score*100).toFixed(0)+'% gap)<br>'+
         'Membership: '+c._mem.toFixed(2)+'<br>'+
-        "Dist to nearest McDonald's: "+c.dist_to_own_km.toFixed(2)+' km'+
+        "Dist to nearest M: "+c.dist_to_own_km.toFixed(2)+' km'+
+        (c.nearest_own_name ? ' ('+c.nearest_own_name+')' : '')+
         nearbyHtml(c.nearby);
       L.marker([c.lat, c.lon], {{icon: ico}})
        .bindPopup(pop, {{maxWidth: 340}})
@@ -432,6 +448,19 @@ def build_map(
     )
     folium.TileLayer("CartoDB Positron", name="CartoBaseMap").add_to(m)
     folium.TileLayer("OpenStreetMap", name="OpenStreetMap").add_to(m)
+
+    # Study area bounding box
+    folium.Rectangle(
+        bounds=[
+            [BBOX["lat_min"], BBOX["lon_min"]],
+            [BBOX["lat_max"], BBOX["lon_max"]],
+        ],
+        color="#1565C0",
+        weight=2,
+        dash_array="8 5",
+        fill=False,
+        tooltip="Study area (Tokyo 23 wards + surrounds)",
+    ).add_to(m)
 
     # Demand heatmap
     heat = all_df[all_df["review_count"] > 0]
@@ -566,6 +595,7 @@ def main():
 
     print("Finding nearby competitors for each candidate (≤ 1 km, top 3 per category)...")
     scored = _add_nearby_competitors(scored, comp_df)
+    scored = _add_nearest_own(scored, own_df)
 
     print("\nBuilding interactive map with category weight sliders...")
     m = build_map(scored, own_df, comp_df, all_df)

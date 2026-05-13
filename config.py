@@ -26,7 +26,6 @@ CHAIN_RESTAURANTS = [
     "鳥貴族",  # Torikizoku
     "白木屋",  # Shiraki-ya
     "名代富士そば",  # Meishiro Fuji Soba
-    "オタフク",  # Otafuku
     "ファーストキッチン", #first_kitchen
 ]
 
