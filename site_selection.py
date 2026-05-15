@@ -31,6 +31,7 @@ from config_modeling import (
     OUTPUT_DIR, OUTPUT_CSV, COMPETITOR_SOURCES,
 )
 from spatial_features import build_balltree, add_nearest_distance
+from enrich_land_price import build_land_price_lookup, add_land_price
 
 OWN_BRAND = "マクドナルド"
 NOISE_MEMBERSHIP = 0.50   # default confidence weight for sparse-area candidates
@@ -66,7 +67,7 @@ def load_all_restaurants() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
     Returns
     -------
-    all_df  : every restaurant (McDonald's + competitors)
+    all_df  : every restaurant (McDonald's + competitors), with land_price_per_sqm
     own_df  : McDonald's only
     comp_df : competitors only
     """
@@ -81,7 +82,12 @@ def load_all_restaurants() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
             df.loc[df["brand"] == cfg["exclude_brand"], "is_own"] = True
         frames.append(df)
 
-    all_df  = pd.concat(frames, ignore_index=True)
+    all_df = pd.concat(frames, ignore_index=True)
+
+    # Attach land price (IQR-cleaned ward/town averages)
+    land_lookup = build_land_price_lookup()
+    all_df = add_land_price(all_df, land_lookup)
+
     own_df  = all_df[all_df["is_own"]].copy().reset_index(drop=True)
     comp_df = all_df[~all_df["is_own"]].copy().reset_index(drop=True)
     comp_df["popularity"] = comp_df["review_count"] * comp_df["comp_weight"]
@@ -171,9 +177,10 @@ def compute_cluster_stats(
     print(f"  Noise restaurants reassigned: {n_noise} → nearest centroid")
 
     stats = df_temp.groupby("cluster").agg(
-        total_demand  = ("review_count", "sum"),
-        n_restaurants = ("review_count", "count"),
-        mcd_count     = ("is_own",       "sum"),
+        total_demand       = ("review_count",       "sum"),
+        n_restaurants      = ("review_count",       "count"),
+        mcd_count          = ("is_own",             "sum"),
+        avg_land_price     = ("land_price_per_sqm", "mean"),
     )
     stats["mcd_saturation"] = stats["mcd_count"] / stats["n_restaurants"]
     stats["mcd_gap"]        = 1.0 - stats["mcd_saturation"]
@@ -220,7 +227,8 @@ def score_candidates(
         raise RuntimeError("No candidates survived filtering — check BBOX / thresholds.")
 
     filt = filt.join(
-        cluster_stats[["total_demand", "mcd_gap", "mcd_count", "n_restaurants"]],
+        cluster_stats[["total_demand", "mcd_gap", "mcd_count", "n_restaurants",
+                        "avg_land_price"]],
         on="cluster_label",
     )
 
@@ -228,6 +236,12 @@ def score_candidates(
     filt["cluster_demand_score"] = filt["total_demand"] / demand_max
     filt["mcd_gap_score"]        = filt["mcd_gap"]
     filt["distance_buffer"]      = filt["dist_to_own_km"].clip(upper=2.0) / 2.0
+
+    # Affordability score — informational only, not included in base_score
+    price_max = filt["avg_land_price"].max()
+    price_min = filt["avg_land_price"].min()
+    price_range = max(price_max - price_min, 1.0)
+    filt["affordability_score"] = 1.0 - (filt["avg_land_price"] - price_min) / price_range
 
     filt["base_score"] = (
         SCORE_WEIGHTS["cluster_demand"]  * filt["cluster_demand_score"] +
@@ -318,6 +332,7 @@ def main():
         "latitude", "longitude", "score",
         "cluster_label", "membership_strength", "was_noise",
         "cluster_demand_score", "mcd_gap_score", "distance_buffer",
+        "affordability_score", "avg_land_price",
         "dist_to_own_km", "dist_to_comp_km",
         "total_demand", "mcd_count", "n_restaurants",
     ]

@@ -46,6 +46,7 @@ DEFAULT_W_FAMILY   = 0.3
 _CAND_COLS_V2 = [
     "latitude", "longitude", "was_noise", "base_score", "raw_membership",
     "cluster_label", "cluster_demand_score", "mcd_gap_score", "distance_buffer",
+    "affordability_score", "avg_land_price",
     "dist_to_own_km", "dist_to_comp_km", "total_demand", "mcd_count", "n_restaurants",
     "burger_demand", "teishoku_demand", "family_demand", "mcd_demand_contrib",
 ]
@@ -107,7 +108,8 @@ def _serialise_candidates(scored: pd.DataFrame) -> str:
     })
     data["was_noise"] = data["was_noise"].astype(bool)
     for col in ["base_score", "raw_membership", "cluster_demand_score",
-                "mcd_gap_score", "distance_buffer", "dist_to_own_km", "dist_to_comp_km"]:
+                "mcd_gap_score", "distance_buffer", "affordability_score",
+                "dist_to_own_km", "dist_to_comp_km"]:
         data[col] = data[col].round(5)
     records = data.to_dict("records")
     for i, rec in enumerate(records):
@@ -179,7 +181,36 @@ def _title_html() -> str:
     return """
 <style>
   body { padding-top:48px !important; box-sizing:border-box !important; }
+
+  .dash-preview-wrap { margin-left:auto; position:relative; }
+
+  .dash-btn {
+    display:inline-block; font-size:13px; font-weight:600; color:#1565C0;
+    text-decoration:none; padding:5px 12px; border:1px solid #1565C0;
+    border-radius:5px; white-space:nowrap; background:transparent;
+    transition:background 0.15s;
+  }
+  .dash-btn:hover { background:#E3F2FD; }
+
+  .dash-preview {
+    display:none;
+    position:absolute; top:calc(100% + 8px); right:0;
+    width:320px; height:200px;
+    overflow:hidden;
+    border-radius:8px;
+    box-shadow:0 6px 24px rgba(0,0,0,0.18);
+    border:1px solid #ddd;
+    background:white;
+    z-index:9999;
+  }
+  .dash-preview iframe {
+    width:1280px; height:800px;
+    transform:scale(0.25); transform-origin:top left;
+    border:none; pointer-events:none;
+  }
+  .dash-preview-wrap:hover .dash-preview { display:block; }
 </style>
+
 <div style="
     position:fixed; top:0; left:0; right:0; height:48px; z-index:2000;
     background:white; padding:0 18px;
@@ -188,6 +219,15 @@ def _title_html() -> str:
     display:flex; align-items:center;
 ">
   Geo-intelligence Decision System&nbsp;<span style="color:#888;font-weight:normal;font-size:16px;">(Demo)</span>
+
+  <div class="dash-preview-wrap">
+    <a href="competitor_dashboard.html" target="_blank" class="dash-btn">
+      Competitor Dashboard ↗
+    </a>
+    <div class="dash-preview">
+      <iframe src="competitor_dashboard.html" scrolling="no"></iframe>
+    </div>
+  </div>
 </div>
 """
 
@@ -399,7 +439,11 @@ document.addEventListener('DOMContentLoaded', function() {{
         'Membership: '+c._mem.toFixed(2)+'<br>'+
         "Dist to nearest M: "+c.dist_to_own_km.toFixed(2)+' km'+
         (c.nearest_own_name ? ' ('+c.nearest_own_name+')' : '')+
-        nearbyHtml(c.nearby);
+        nearbyHtml(c.nearby)+
+        '<div style="margin-top:5px;border-top:1px solid #ddd;padding-top:5px;font-size:11px;">'+
+        '💴 Land price: ¥'+(c.avg_land_price/10000).toFixed(0)+'万/m²'+
+        ' <span style="color:#888;">(affordability='+c.affordability_score.toFixed(2)+')</span>'+
+        '</div>';
       L.marker([c.lat, c.lon], {{icon: ico}})
        .bindPopup(pop, {{maxWidth: 340}})
        .bindTooltip('#'+c.rank+(c.was_noise?' (sparse) ':' ')+'score='+c.score.toFixed(3))
@@ -588,6 +632,11 @@ def main():
     )
     for col in ["burger_demand", "teishoku_demand", "family_demand", "mcd_demand_contrib"]:
         scored[col] = scored[col].fillna(0).astype(int)
+
+    # Ensure affordability columns are present (computed in score_candidates)
+    for col in ["affordability_score", "avg_land_price"]:
+        if col not in scored.columns:
+            scored[col] = 0.0
 
     n_noise = int(scored["was_noise"].sum())
     print(f"  Filtered pool: {len(scored):,} candidates "

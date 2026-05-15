@@ -126,6 +126,103 @@ final_score = base_score × membership_strength   (normalised to [0, 1])
 
 ---
 
+## Worked example: how scoring and Sparse Area Confidence interact
+
+This example uses three simplified candidates to show exactly how a score is computed and why raising the confidence slider can cause a confirmed candidate to disappear from the rankings.
+
+### Setup
+
+| | Candidate X | Candidate Y | Candidate Z |
+|---|---|---|---|
+| Type | Confirmed cluster | **Sparse area** | Confirmed cluster |
+| Proximity | isolated | 600 m from Z | 600 m from Y |
+| Cluster demand score | 0.70 | 0.90 | 0.30 |
+| M-gap score | 1.00 | 1.00 | 1.00 |
+| Distance buffer | 1.00 | 1.00 | 0.70 |
+
+### Step 1 — Compute base score
+
+```
+base = 0.40 × demand_score + 0.40 × mcd_gap + 0.20 × distance_buffer
+```
+
+```
+X:  0.40×0.70 + 0.40×1.0 + 0.20×1.0 = 0.28 + 0.40 + 0.20 = 0.88
+Y:  0.40×0.90 + 0.40×1.0 + 0.20×1.0 = 0.36 + 0.40 + 0.20 = 0.96
+Z:  0.40×0.30 + 0.40×1.0 + 0.20×0.7 = 0.12 + 0.40 + 0.14 = 0.66
+```
+
+### Step 2 — Apply membership weight
+
+Confirmed candidates always have membership = 1.0.
+Sparse candidates use the slider value.
+
+```
+raw = base × membership
+```
+
+**At Sparse Area Confidence = 0.5 (default):**
+
+| Candidate | base | membership | raw |
+|---|---|---|---|
+| X (confirmed) | 0.88 | 1.0 | **0.880** |
+| Y (sparse) | 0.96 | 0.5 | **0.480** |
+| Z (confirmed) | 0.66 | 1.0 | **0.660** |
+
+**At Sparse Area Confidence = 0.9:**
+
+| Candidate | base | membership | raw |
+|---|---|---|---|
+| X (confirmed) | 0.88 | 1.0 | **0.880** |
+| Y (sparse) | 0.96 | 0.9 | **0.864** |
+| Z (confirmed) | 0.66 | 1.0 | **0.660** |
+
+### Step 3 — Normalise so the best candidate scores 1.0
+
+```
+score = raw / max(raw across all candidates)
+```
+
+**At confidence = 0.5** — global max is 0.880 (X):
+
+| Candidate | raw | score | sorted rank |
+|---|---|---|---|
+| X | 0.880 | 1.000 | #1 |
+| Z | 0.660 | 0.750 | #2 |
+| Y | 0.480 | 0.545 | #3 |
+
+**At confidence = 0.9** — global max is still 0.880 (X):
+
+| Candidate | raw | score | sorted rank |
+|---|---|---|---|
+| X | 0.880 | 1.000 | #1 |
+| Y | 0.864 | 0.982 | #2 |
+| Z | 0.660 | 0.750 | #3 |
+
+### Step 4 — Greedy NMS selects in score order, skipping anything within 1.5 km
+
+**At confidence = 0.5** (order: X → Z → Y):
+
+1. Pick X ✅
+2. Pick Z ✅ — Y is nearby but hasn't been picked yet, so no conflict
+3. Reach Y — only 600 m from Z, which is already selected → **Y is skipped**
+
+**At confidence = 0.9** (order: X → Y → Z):
+
+1. Pick X ✅
+2. Pick Y ✅ — marks a 1.5 km exclusion zone around it
+3. Reach Z — only 600 m from Y → **Z is blocked and disappears from the top 50**
+
+### Key takeaway
+
+Z's own score never changed. Its base is 0.66 at every confidence level. What changed is that Y — a nearby sparse candidate with a stronger underlying signal — got promoted above Z in the queue when the confidence slider increased. Because the selection is greedy and first-come-first-served, that tiny ordering flip is enough to permanently exclude Z, even though Z scored higher than Y did at low confidence.
+
+**The candidate did not get worse. It got unlucky in the queue.**
+
+> Note: the demand zones themselves (HDBSCAN clusters) are fixed at map generation time and do not change when you move any slider. Only the scoring, ranking, and NMS selection respond to the controls.
+
+---
+
 ## Mathematical formulation
 
 ### Demand weighting
