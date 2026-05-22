@@ -4,7 +4,9 @@
 
 TabelogやGoogleMap等のクローリング可能なデータソースからレストランデータを収集し、HDBSCANで東京の飲食需要ゾーン(Demand Zone)をクラスタリングして、**M** の新規出店候補地をスコアリングするデータパイプライン。
 
-![インタラクティブマップ プレビュー](assets/thumbnail.png)
+| サイト選定マップ | HDBSCANエクスプローラー |
+|:---:|:---:|
+| ![サイト選定マップ](assets/dashboard.png) | ![HDBSCANエクスプローラー](assets/hdbscan.png) |
 
 ---
 
