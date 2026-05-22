@@ -4,9 +4,11 @@
 
 A data pipeline that scrapes restaurant data from a crawlable source (e.g. Google Maps or Tabelog), clusters dining-demand zones across Tokyo with HDBSCAN, and scores candidate locations for new **M** outlets — complete with an interactive map.
 
-| Site selection map | HDBSCAN Explorer |
+![Interactive map preview](assets/thumbnail.png)
+
+| Dashboard | HDBSCAN Explorer |
 |:---:|:---:|
-| ![Site selection map](assets/dashboard.png) | ![HDBSCAN Explorer](assets/hdbscan.png) |
+| ![Dashboard](assets/dashboard.png) | ![HDBSCAN Explorer](assets/hdbscan.png) |
 
 ---
 
