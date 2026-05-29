@@ -6,6 +6,8 @@ A data pipeline that scrapes restaurant data from a crawlable source (e.g. Googl
 
 ![Interactive map preview](assets/thumbnail.png)
 
+![Detail view](assets/detail.png)
+
 | Dashboard | HDBSCAN Explorer |
 |:---:|:---:|
 | ![Dashboard](assets/dashboard.png) | ![HDBSCAN Explorer](assets/hdbscan.png) |
